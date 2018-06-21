@@ -7,7 +7,7 @@ case class BranchNode(leaves: Map[Char, MyNode]) extends MyNode
 
 case class LeafNode() extends MyNode
 
-object Starter {
+object Solution {
 
   def main(args: Array[String]) {
     val sc = new java.util.Scanner(System.in)
@@ -24,6 +24,7 @@ object Starter {
             case Success(s) => root = s
             case Failure(e) => {
               println("BAD SET")
+              println(e.getMessage)
               break
             }
           }
@@ -40,10 +41,10 @@ object Tree {
     val key = tail.charAt(0)
     if (bn.leaves.keySet.contains(key)) {
       if (tail.length() == 1) {
-        Failure(new Exception())
+        Failure(new Exception(fullWord))
       } else {
         bn.leaves(key) match {
-          case _: LeafNode => Failure(new Exception())
+          case _: LeafNode => Failure(new Exception(fullWord))
           case b: BranchNode =>
             val tryRes = addStringToTrie(tail.substring(1), b, fullWord)
             tryRes match {
