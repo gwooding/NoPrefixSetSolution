@@ -1,20 +1,26 @@
 import scala.util.{Failure, Success, Try}
 import scala.util.control.Breaks._
 
+trait MyNode
+
+case class BranchNode(leaves: Map[Char, MyNode]) extends MyNode
+
+case class LeafNode() extends MyNode
+
 object Starter {
 
   def main(args: Array[String]) {
     val sc = new java.util.Scanner(System.in)
     val n = sc.nextInt()
-    val c = new Array[String](n)
+    val wordArray = new Array[String](n)
 
     var root = BranchNode(Map.empty[Char, MyNode])
 
     breakable {
-      for (c_i <- 0 to n) {
-        if (c_i != 0) {
-          c(c_i - 1) = sc.nextLine()
-          Tree.fctn(c(c_i - 1), root, c(c_i - 1)) match {
+      for (i <- 0 to n) {
+        if (i != 0) {
+          wordArray(i - 1) = sc.nextLine()
+          Tree.addStringToTrie(wordArray(i - 1), root, wordArray(i - 1)) match {
             case Success(s) => root = s
             case Failure(e) => {
               println("BAD SET")
@@ -28,29 +34,23 @@ object Starter {
   }
 }
 
-trait MyNode
-
-case class BranchNode(leaves: Map[Char, MyNode]) extends MyNode
-
-case class LeafNode() extends MyNode
-
 object Tree {
 
-  def fctn(tail: String, bn: BranchNode, fs: String): Try[BranchNode] = {
+  def addStringToTrie(tail: String, bn: BranchNode, fullWord: String): Try[BranchNode] = {
     val key = tail.charAt(0)
     if (bn.leaves.keySet.contains(key)) {
       if (tail.length() == 1) {
-        Failure[BranchNode](new Exception())
+        Failure(new Exception())
       } else {
         bn.leaves(key) match {
-          case _: LeafNode => Failure[BranchNode](new Exception())
+          case _: LeafNode => Failure(new Exception())
           case b: BranchNode =>
-            val tryRes = fctn(tail.substring(1), b, fs)
+            val tryRes = addStringToTrie(tail.substring(1), b, fullWord)
             tryRes match {
-              case Success(s) => {
-                val res = bn.leaves - key
-                val final_res = res + (key -> s)
-                Success(BranchNode(final_res))
+              case Success(modifiedBranch) => {
+                val mapWithoutKey = bn.leaves - key
+                val mapWithNewKeyValue = mapWithoutKey + (key -> modifiedBranch)
+                Success(BranchNode(mapWithNewKeyValue))
               }
               case Failure(e) => {
                 Failure(e)
@@ -60,14 +60,14 @@ object Tree {
       }
     } else {
       if (tail.length() == 1) {
-        val res: Map[Char, MyNode] = bn.leaves
-        Success(BranchNode(res + (key -> LeafNode())))
+        val map = bn.leaves
+        Success(BranchNode(map + (key -> LeafNode())))
       } else {
-        val tryRes = fctn(tail.substring(1), BranchNode(Map.empty[Char, MyNode]), fs)
+        val tryRes = addStringToTrie(tail.substring(1), BranchNode(Map.empty[Char, MyNode]), fullWord)
         tryRes match {
-          case Success(s) => {
-            val final_res = bn.leaves + (key -> s)
-            Success(BranchNode(final_res))
+          case Success(newBranch) => {
+            val mapWithNewBranch = bn.leaves + (key -> newBranch)
+            Success(BranchNode(mapWithNewBranch))
           }
           case Failure(e) => {
             Failure(e)
